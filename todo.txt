@@ -1,0 +1,1 @@
+1.  Implement axis scanning to clean up collision detection and management.
