@@ -1,1 +1,2 @@
-1.  Implement axis scanning to clean up collision detection and management.
+Still trying to fix the stupid wall collision stuff.  Might refactor based on the example code that I saw.  :wq
+
