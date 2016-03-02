@@ -88,7 +88,7 @@ class Player(pygame.sprite.Sprite):
     block_hit_list = test_rect.collidelistall(wall_rect_list)
     if len(block_hit_list) > 0:
       for block_index in block_hit_list:
-        if self.going_left == True:
+        if self.dx < 0:
           furthest_right = -100
           current_right = wall_rect_list[block_index].right
           if current_right > furthest_right:
@@ -96,7 +96,7 @@ class Player(pygame.sprite.Sprite):
           self.rect.left = furthest_right + 1
           self.dvx = 0
           self.dx = 0
-        elif self.going_left == False:
+        elif self.dx > 0:
           furthest_left = 10000
           current_left = wall_rect_list[block_index].left
           if current_left < furthest_left:
