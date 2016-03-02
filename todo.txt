@@ -1,2 +1,2 @@
-Still trying to fix the stupid wall collision stuff.  Might refactor based on the example code that I saw.  :wq
-
+1.  Clean up controls and deal with x axis teleport upon switch problem.
+   I believe this is either caused by dual control pushes (i.e. make them mutuall exclusive) or it's cause by a deceleration collision while facing the wrong direction
