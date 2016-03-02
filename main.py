@@ -6,8 +6,8 @@ from pygame.locals import *
 #Set some constants
 BLACK = (0,0,0)
 WHITE = (255,255,255)
-FPS=10 
-GRAVITY=2
+FPS=30 
+GRAVITY=1
 
 clock = pygame.time.Clock()
 pygame.init
@@ -26,7 +26,7 @@ for params in spriteParamList:
   animList.append(anim)
   
 
-def keyPressed(key):
+def key_pressed(key):
   keysPressed = pygame.key.get_pressed()
   if keysPressed[key]:
     return True
@@ -46,83 +46,83 @@ class Player(pygame.sprite.Sprite):
     self.rect.y = y
     self.scan_rect = self.rect.copy()
 
-    self.maxSpeed = 8 
-    self.jumpAccel = -20
+    self.max_speed = 10
+    self.jump_accel = -8
     self.dx = 0
     self.dy = 0
     self.dvx= 0
     self.dvy= 0
 
+  def check_standing(self):
+    test_rect = self.rect.copy()
+    test_rect.y += 1
+    if len(test_rect.collidelistall(wall_rect_list)) == 0:
+      self.standing = False
+    else:
+      self.standing = True
+      self.dvy = 0
+      self.dy = 0
+  
+  def calculate_gravity(self):
+    test_rect = self.rect.copy()
+    test_rect.y += self.dy
+    block_hit_list = test_rect.collidelistall(wall_rect_list)
+    if len(block_hit_list) == 0:
+      self.dvy = GRAVITY
+    else:
+      highest_top = 10000
+      for block_index in block_hit_list:
+        current_top = wall_rect_list[block_index].top  
+        if current_top < highest_top:
+          highest_top = current_top 
+      self.rect.bottom = highest_top
+      self.dvy = 0
+      self.dy = 0
+
+  def calculate_collide(self):
+    test_rect = self.rect.copy()
+    test_rect.x += self.dx
+    block_hit_list = test_rect.collidelistall(wall_rect_list)
+    if len(block_hit_list) > 0:
+      for block_index in block_hit_list:
+        pass
+        
+
+  def jump(self):
+    self.dvy = self.jump_accel
+
   def update(self):
-    if (not keyPressed(K_a)) and (not keyPressed(K_d)):
-      if self.dx > 0:
-        self.dvx = -1
-      elif self.dx < 0:
-        self.dvx = 1
-      elif self.dx == 0:
+    self.check_standing()
+    if self.standing == False:
+      self.calculate_gravity()
+
+    if self.standing == True:
+      if (key_pressed(K_w)):
+        self.jump()
+
+    if key_pressed(K_a) == True:
+      if (self.dx > -self.max_speed):
+        self.dvx = -1 
+      else:
         self.dvx = 0
 
-    if (keyPressed(K_a) and keyPressed(K_d)):
+    if key_pressed(K_d) == True:
+      if (self.dx < self.max_speed):
+        self.dvx = 1  
+      else:  
+        self.dvx = 0
+ 
+    if (not key_pressed(K_d)) and (not key_pressed(K_a)):
       self.dvx = 0
       self.dx = 0
-   
-    if keyPressed(K_d):
-      self.dvx += 1
-      if self.goingLeft:
-        self.runningAnim.flip(True, False)
-        self.goingLeft = False
-  
-    if keyPressed(K_a):
-      self.dvx -= 1
-      if not self.goingLeft:
-        self.runningAnim.flip(True, False)
-        self.goingLeft = True
+
+    self.dx += self.dvx
+    self.rect.x += self.dx
+
+    self.dy += self.dvy
+    self.rect.y += self.dy
     
-    if keyPressed(K_w) and self.standing:
-      self.dvy = self.jumpAccel 
-      self.standing = False 
-    
-    self.scan_rect.x = self.rect.x + self.dvx
-    self.scan_rect.y = self.rect.y + self.dvy
-
-    self.dvy += GRAVITY
-    if self.standing:
-      self.dy = 0
-      self.dvy = 0
-    else:
-      self.dy = self.dvy + GRAVITY
-        
-    if abs(self.dx + self.dvx) > self.maxSpeed:
-      self.dvx= 0
-    else:
-      self.dx += self.dvx
-
-    block_hit_list = player.scan_rect.collidelistall(wall_rect_list) 
-    for block_index in block_hit_list:
-      block = wall_rect_list[block_index]
-      if self.dy > 0:
-        self.rect.bottom = block.top
-        self.dvy = 0
-        self.dy= 0
-        self.standing = True
-      elif self.dy < 0:
-        self.rect.top = block.bottom
-        self.dvy = 0
-        self.dy= 0
-    self.rect.top += self.dy
-    self.scan_rect.y = self.rect.y
-
-    block_hit_list = player.scan_rect.collidelistall(wall_rect_list) 
-    print str(block_hit_list)
-    for block_index in block_hit_list:
-      block = wall_rect_list[block_index]
-      if self.dx > 0:
-        self.rect.right = block.left
-      elif self.dx < 0:
-        self.rect.left = block.right
-
-    self.rect.left += self.dx
-     
+ 
 class Wall(pygame.sprite.Sprite):
   def __init__(self, x, y, width, height):
     super(Wall, self).__init__()
@@ -137,7 +137,7 @@ wall_rect_list = []
 all_sprite_list = pygame.sprite.Group()
 wall_list = pygame.sprite.Group()
 
-wall = Wall(0, 390, 500, 1)
+wall = Wall(0, 390, 500, 100)
 wall2 = Wall(0, 290, 30, 100)
 wall_list.add(wall)
 wall_list.add(wall2)
@@ -155,7 +155,7 @@ all_sprite_list.add(player)
 #Setup the event loop and set the screen background
 while True:
   for event in pygame.event.get():
-    if event.type == QUIT or keyPressed(K_q):
+    if event.type == QUIT or key_pressed(K_q):
       pygame.quit()
       sys.exit()
    
