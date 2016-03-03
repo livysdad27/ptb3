@@ -24,7 +24,6 @@ for params in spriteParamList:
   frames = list(zip(images, timings))
   anim = pyganim.PygAnimation(frames)
   animList.append(anim)
-  
 
 def key_pressed(key):
   keysPressed = pygame.key.get_pressed()
@@ -62,15 +61,30 @@ class Player(pygame.sprite.Sprite):
       self.standing = True
       self.dvy = 0
       self.dy = 0
+    
+  def check_leaning(self):
+    test_rect = self.rect.copy()
+    test_rect.x = self.rect.x
+    if self.dvx < 0:
+      test_rect.x -= 1
+      if len(test_rect.collidelistall(wall_rect_list)) > 0:
+        self.dvx = 0
+        self.dx = 0
+    elif self.dvx > 0:
+      test_rect.x += 1 
+      if len(test_rect.collidelistall(wall_rect_list)) > 0:
+        self.dvx = 0
+        self.dx = 0
   
   def calculate_gravity(self):
     test_rect = self.rect.copy()
+    test_rect.x = self.rect.x
     test_rect.y += self.dy
     block_hit_list = test_rect.collidelistall(wall_rect_list)
     if len(block_hit_list) == 0:
       self.dvy = GRAVITY
       self.standing = False
-    else:
+    elif self.dy > 0:
       highest_top = 10000
       for block_index in block_hit_list:
         current_top = wall_rect_list[block_index].top  
@@ -80,28 +94,39 @@ class Player(pygame.sprite.Sprite):
       self.dvy = 0
       self.dy = 0
       self.standing = True
+    elif self.dy < 0:
+      lowest_bottom = -10000
+      for block_index in block_hit_list:
+        current_bottom= wall_rect_list[block_index].bottom
+        if current_bottom > lowest_bottom :
+          lowest_bottom = current_bottom 
+      self.rect.top = lowest_bottom + 1
+      self.dvy = 0
+      self.dy = 0
+      self.standing = False
+   
 
   def calculate_collide(self):
+    if self.dx == 0: pass
     test_rect = self.rect.copy()
-    test_rect.y = self.rect.y
     test_rect.x += self.dx
     block_hit_list = test_rect.collidelistall(wall_rect_list)
     if len(block_hit_list) > 0:
       for block_index in block_hit_list:
         if self.dx < 0:
-          furthest_right = -100
+          furthest_right = -10000
           current_right = wall_rect_list[block_index].right
-          if current_right > furthest_right:
+          if current_right > furthest_right :
             furthest_right = current_right
-          self.rect.left = furthest_right + 1
+          self.rect.left = furthest_right + 1 
           self.dvx = 0
           self.dx = 0
         elif self.dx > 0:
           furthest_left = 10000
           current_left = wall_rect_list[block_index].left
-          if current_left < furthest_left:
+          if current_left < furthest_left :
             furthest_left = current_left
-          self.rect.right = furthest_left -1
+          self.rect.right = furthest_left - 1
           self.dvx = 0
           self.dx = 0
 
@@ -110,15 +135,6 @@ class Player(pygame.sprite.Sprite):
     self.standing = False
 
   def update(self):
-    self.check_falling()
-    if self.standing == False:
-      self.calculate_gravity()
-    self.calculate_collide()
-
-    if self.standing == True:
-      if (key_pressed(K_w)):
-        self.jump()
-
     if key_pressed(K_a) == True:
       if (self.dx > -self.max_speed):
         self.dvx = -1 
@@ -136,17 +152,28 @@ class Player(pygame.sprite.Sprite):
       if self.going_left == True:
         self.runningAnim.flip(True, False)
       self.going_left = False
- 
+    
     if (not key_pressed(K_d)) and (not key_pressed(K_a)):
       self.dvx = 0
       self.dx = 0
-
+   
+    self.check_leaning() 
+    self.calculate_collide()
     self.dx += self.dvx
     self.rect.x += self.dx
+    
+    self.check_falling()
+
+    if self.standing == False:
+      self.calculate_gravity()
+
+    if self.standing == True:
+      if (key_pressed(K_w)):
+        self.jump()
 
     self.dy += self.dvy
     self.rect.y += self.dy
-    
+
  
 class Wall(pygame.sprite.Sprite):
   def __init__(self, x, y, width, height):
@@ -165,12 +192,18 @@ wall_list = pygame.sprite.Group()
 wall = Wall(0, 390, 500, 100)
 wall2 = Wall(0, 290, 30, 100)
 wall3 = Wall(200, 290, 30, 100)
+#wall4 = Wall(400, 290, 30, 100)
+wall5 = Wall(400, 280, 30, 30)
 wall_list.add(wall)
 wall_list.add(wall2)
 wall_list.add(wall3)
+#wall_list.add(wall4)
+wall_list.add(wall5)
 all_sprite_list.add(wall)
 all_sprite_list.add(wall2)
 all_sprite_list.add(wall3)
+#$all_sprite_list.add(wall4)
+all_sprite_list.add(wall5)
 
 for wall in wall_list:
   wall_rect_list.append(wall.rect)
